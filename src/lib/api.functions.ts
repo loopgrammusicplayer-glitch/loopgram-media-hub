@@ -77,7 +77,7 @@ function publicCache() {
 }
 
 export const getFirebaseConfig = createServerFn({ method: "GET" }).handler(async () => ({
-  ...firebaseWebConfig(process.env["FIREBASE_API_KEY"]?.trim()),
+  ...firebaseWebConfig((process.env["FIREBASE_API_KEY"] || process.env["GOOGLE_API_KEY"])?.trim()),
   measurementId: process.env["GOOGLE_ANALYTICS_MEASUREMENT_ID"]?.trim() ?? "",
 }));
 
