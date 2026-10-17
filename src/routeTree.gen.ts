@@ -10,33 +10,232 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OwnerRouteImport } from './routes/owner'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiUploadPartRouteImport } from './routes/api/upload-part'
+import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
+import { Route as PostsIndexRouteImport } from './routes/posts.index'
+import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
+import { Route as WatchIdRouteImport } from './routes/watch.$id'
+import { Route as ApiMediaSplatRouteImport } from './routes/api/media.$'
+import { Route as WatchIdCommentsRouteImport } from './routes/watch_.$id.comments'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerRoute = OwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadPartRoute = ApiUploadPartRouteImport.update({
+  id: '/api/upload-part',
+  path: '/api/upload-part',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostsIndexRoute = PostsIndexRouteImport.update({
+  id: '/posts/',
+  path: '/posts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostsSlugRoute = PostsSlugRouteImport.update({
+  id: '/posts/$slug',
+  path: '/posts/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchIdRoute = WatchIdRouteImport.update({
+  id: '/watch/$id',
+  path: '/watch/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMediaSplatRoute = ApiMediaSplatRouteImport.update({
+  id: '/api/media/$',
+  path: '/api/media/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchIdCommentsRoute = WatchIdCommentsRouteImport.update({
+  id: '/watch_/$id/comments',
+  path: '/watch/$id/comments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
+  '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/upload-part': typeof ApiUploadPartRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/posts/': typeof PostsIndexRoute
+  '/api/media/$': typeof ApiMediaSplatRoute
+  '/watch/$id/comments': typeof WatchIdCommentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
+  '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/upload-part': typeof ApiUploadPartRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/posts': typeof PostsIndexRoute
+  '/api/media/$': typeof ApiMediaSplatRoute
+  '/watch/$id/comments': typeof WatchIdCommentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
+  '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/upload-part': typeof ApiUploadPartRoute
+  '/pages/$slug': typeof PagesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/watch/$id': typeof WatchIdRoute
+  '/posts/': typeof PostsIndexRoute
+  '/api/media/$': typeof ApiMediaSplatRoute
+  '/watch_/$id/comments': typeof WatchIdCommentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/contact'
+    | '/forgot-password'
+    | '/login'
+    | '/owner'
+    | '/register'
+    | '/search'
+    | '/api/upload'
+    | '/api/upload-part'
+    | '/pages/$slug'
+    | '/posts/$slug'
+    | '/watch/$id'
+    | '/posts/'
+    | '/api/media/$'
+    | '/watch/$id/comments'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/account'
+    | '/contact'
+    | '/forgot-password'
+    | '/login'
+    | '/owner'
+    | '/register'
+    | '/search'
+    | '/api/upload'
+    | '/api/upload-part'
+    | '/pages/$slug'
+    | '/posts/$slug'
+    | '/watch/$id'
+    | '/posts'
+    | '/api/media/$'
+    | '/watch/$id/comments'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/contact'
+    | '/forgot-password'
+    | '/login'
+    | '/owner'
+    | '/register'
+    | '/search'
+    | '/api/upload'
+    | '/api/upload-part'
+    | '/pages/$slug'
+    | '/posts/$slug'
+    | '/watch/$id'
+    | '/posts/'
+    | '/api/media/$'
+    | '/watch_/$id/comments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  ContactRoute: typeof ContactRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  OwnerRoute: typeof OwnerRoute
+  RegisterRoute: typeof RegisterRoute
+  SearchRoute: typeof SearchRoute
+  ApiUploadRoute: typeof ApiUploadRoute
+  ApiUploadPartRoute: typeof ApiUploadPartRoute
+  PagesSlugRoute: typeof PagesSlugRoute
+  PostsSlugRoute: typeof PostsSlugRoute
+  WatchIdRoute: typeof WatchIdRoute
+  PostsIndexRoute: typeof PostsIndexRoute
+  ApiMediaSplatRoute: typeof ApiMediaSplatRoute
+  WatchIdCommentsRoute: typeof WatchIdCommentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +247,131 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner': {
+      id: '/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload-part': {
+      id: '/api/upload-part'
+      path: '/api/upload-part'
+      fullPath: '/api/upload-part'
+      preLoaderRoute: typeof ApiUploadPartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages/$slug': {
+      id: '/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posts/': {
+      id: '/posts/'
+      path: '/posts'
+      fullPath: '/posts/'
+      preLoaderRoute: typeof PostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/posts/$slug': {
+      id: '/posts/$slug'
+      path: '/posts/$slug'
+      fullPath: '/posts/$slug'
+      preLoaderRoute: typeof PostsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch/$id': {
+      id: '/watch/$id'
+      path: '/watch/$id'
+      fullPath: '/watch/$id'
+      preLoaderRoute: typeof WatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/media/$': {
+      id: '/api/media/$'
+      path: '/api/media/$'
+      fullPath: '/api/media/$'
+      preLoaderRoute: typeof ApiMediaSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch_/$id/comments': {
+      id: '/watch_/$id/comments'
+      path: '/watch/$id/comments'
+      fullPath: '/watch/$id/comments'
+      preLoaderRoute: typeof WatchIdCommentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  ContactRoute: ContactRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  OwnerRoute: OwnerRoute,
+  RegisterRoute: RegisterRoute,
+  SearchRoute: SearchRoute,
+  ApiUploadRoute: ApiUploadRoute,
+  ApiUploadPartRoute: ApiUploadPartRoute,
+  PagesSlugRoute: PagesSlugRoute,
+  PostsSlugRoute: PostsSlugRoute,
+  WatchIdRoute: WatchIdRoute,
+  PostsIndexRoute: PostsIndexRoute,
+  ApiMediaSplatRoute: ApiMediaSplatRoute,
+  WatchIdCommentsRoute: WatchIdCommentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
