@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { inputCls } from "@/components/Header";
 import { VideoThumb } from "@/components/VideoCard";
 import { useAuth } from "@/lib/auth";
 import { captureThumbnailFromUrl, isDarkThumb, uploadResumable } from "@/lib/uploader";
-import { listStudioVideos, saveVideo, deleteVideo, type Video } from "@/lib/api.functions";
+import { listStudioVideos, saveVideo, deleteVideo, getContent, saveContent, type Video } from "@/lib/api.functions";
 import { card, smallBtn, useCategories } from "./StudioTabs";
 
 const save = async (token: string, v: Video, patch: Partial<Video>) => {
@@ -115,6 +115,17 @@ function VideoPreview({ v, catName, cats, onClose, onChanged }: { v: Video; catN
   const [cat, setCat] = useState(v.category);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const fq = useQuery({ queryKey: ["page", "featured"], queryFn: () => getContent({ data: { slug: "featured" } }) });
+  const pinned = fq.data?.body.trim() === v.id;
+  const setPin = async (id: string) => {
+    setBusy(true); setMsg("Working…");
+    try {
+      await saveContent({ data: { token: await token(), slug: "featured", title: "", body: id } });
+      await Promise.all([qc.invalidateQueries({ queryKey: ["page", "featured"] }), qc.invalidateQueries({ queryKey: ["featured"] })]);
+      setMsg(id ? "Pinned to the top of the home page." : "Unpinned.");
+    } catch (e: any) { setMsg(e.message); } finally { setBusy(false); }
+  };
   const run = async (fn: () => Promise<Video | null>, ok: string) => {
     setBusy(true); setMsg("Working…");
     try { const nv = await fn(); setMsg(ok); onChanged(nv); } catch (e: any) { setMsg(e.message); } finally { setBusy(false); }
@@ -140,6 +151,7 @@ function VideoPreview({ v, catName, cats, onClose, onChanged }: { v: Video; catN
         ) : v.description ? <p className="mt-2 whitespace-pre-wrap text-sm">{v.description}</p> : null}
         <div className="mt-3 flex flex-wrap gap-2">
           {v.status === "published" && <a href={`/watch/${v.id}`} target="_blank" rel="noreferrer" className={smallBtn}>View on site</a>}
+          {v.status === "published" && <button disabled={busy} onClick={() => setPin(pinned ? "" : v.id)} className={smallBtn}>{pinned ? "★ Featured · Unpin" : "Pin as featured"}</button>}
           <button onClick={() => setEdit((x) => !x)} className={smallBtn}>{edit ? "Cancel edit" : "Edit"}</button>
           <button disabled={busy} onClick={() => run(async () => { const status = v.status === "published" ? "draft" : "published"; await save(await token(), v, { status }); return { ...v, status }; }, "Updated.")} className={smallBtn}>
             {v.status === "published" ? "Unpublish" : "Publish"}
