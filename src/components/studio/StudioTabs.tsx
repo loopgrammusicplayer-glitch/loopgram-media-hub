@@ -13,7 +13,7 @@ import { uploadResumable, cancelUpload, captureThumbnail, MAX_VIDEO_BYTES } from
 import { trackMeta } from "@/lib/subtitles.core";
 import {
   listCategories, saveCategory, deleteCategory, listAllPosts, savePost, deletePost,
-  listAllVideos, saveVideo, addYoutubeVideo, listInquiries, type Post, type Category,
+  listAllVideos, saveVideo, addYoutubeVideo, listInquiries, listMedia, type Post, type Category,
 } from "@/lib/api.functions";
 
 export const card = "rounded-xl border border-border bg-card p-5";
@@ -24,59 +24,130 @@ export function useCategories() {
   return useQuery({ queryKey: ["categories"], queryFn: () => listCategories(), staleTime: 0 });
 }
 
-// ---------------- Dashboard ----------------
+// ---------------- Dashboard (all live data, auto-refreshing) ----------------
 export function DashboardTab() {
   const { token } = useAuth();
-  const { data } = useQuery({
+  const { data, dataUpdatedAt, isFetching, refetch, error } = useQuery({
     queryKey: ["dashboard"],
+    refetchInterval: 15_000,
     queryFn: async () => {
       const t = await token();
-      const [v, p, q] = await Promise.all([
+      const [v, p, q, m, c] = await Promise.all([
         listAllVideos({ data: { token: t } }),
         listAllPosts({ data: { token: t } }),
         listInquiries({ data: { token: t } }),
+        listMedia({ data: { token: t } }).catch(() => []),
+        listCategories().catch(() => []),
       ]);
-      return { v, p, q };
+      return { v, p, q: q as Record<string, string>[], m, c };
     },
   });
-  const stats = data
-    ? [
-        ["Videos", data.v.length],
-        ["Total views", data.v.reduce((a, x) => a + (x.views || 0), 0)],
-        ["Published posts", data.p.filter((x) => x.status === "published").length],
-        ["Draft posts", data.p.filter((x) => x.status === "draft").length],
-        ["Inquiries", data.q.length],
-      ]
-    : [];
+  const [showAll, setShowAll] = useState(false);
+  if (error) return <section className={card}><p role="alert" className="text-sm text-destructive">{(error as Error).message}</p></section>;
+  if (!data) return <section className={card}><h2 className="font-semibold">Dashboard</h2><p className="mt-3 text-sm text-muted-foreground">Loading live data…</p></section>;
+  const { v, p, q, m, c } = data;
+  const pubV = v.filter((x) => x.status === "published").length;
+  const pubP = p.filter((x) => x.status === "published").length;
+  const bytes = m.reduce((a, x) => a + (x.size || 0), 0);
+  const stats: [string, string | number, string?][] = [
+    ["Total views", v.reduce((a, x) => a + (x.views || 0), 0)],
+    ["Videos", v.length, `${pubV} published · ${v.length - pubV} unpublished`],
+    ["Posts", p.length, `${pubP} published · ${p.length - pubP} drafts`],
+    ["Inquiries", q.length],
+    ["Media files", m.length, `${m.filter((x) => !x.inUse).length} unused`],
+    ["Storage used", fmt(bytes)],
+    ["Categories", c.length],
+  ];
+  const catName = (id: string) => c.find((x) => x.id === id)?.name ?? id;
+  const byViews = [...v].sort((a, b) => b.views - a.views);
+  const videos = showAll ? byViews : byViews.slice(0, 12);
+  const recentPosts = [...p].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8);
+  const recentQ = [...q].sort((a, b) => (b["createdAt"] ?? "").localeCompare(a["createdAt"] ?? "")).slice(0, 8);
+  const byCat = c.map((x) => ({ name: x.name, n: v.filter((y) => y.category === x.id).length })).filter((x) => x.n);
   return (
-    <section className={card}>
-      <h2 className="font-semibold">Dashboard</h2>
-      {!data && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {stats.map(([k, n]) => (
-          <div key={k} className="rounded-lg border border-border p-3">
-            <div className="text-2xl font-bold">{Number(n).toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">{k}</div>
-          </div>
-        ))}
-      </div>
-      {data && (
-        <>
-          <h3 className="mt-5 text-sm font-semibold">Top videos</h3>
-          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {[...data.v].sort((a, b) => b.views - a.views).slice(0, 6).map((v) => (
-              <Link key={v.sk} to="/watch/$id" params={{ id: v.id }} className="group block">
-                <VideoThumb v={v} />
-                <span className="mt-1 block truncate text-sm">{v.title}</span>
-                <span className="block text-xs text-muted-foreground">{v.views} views</span>
-              </Link>
+    <div className="space-y-4">
+      <section className={card}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold">Live dashboard</h2>
+          <button onClick={() => refetch()} className={smallBtn}>{isFetching ? "Updating…" : "Refresh"}</button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">Updates every 15 seconds · last {new Date(dataUpdatedAt).toLocaleTimeString()}</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {stats.map(([k, n, sub]) => (
+            <div key={k} className="rounded-lg border border-border p-3">
+              <div className="text-2xl font-bold">{typeof n === "number" ? n.toLocaleString() : n}</div>
+              <div className="text-xs text-muted-foreground">{k}</div>
+              {sub && <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={card}>
+        <h3 className="font-semibold">All videos by views ({v.length})</h3>
+        <ul className="mt-3 divide-y divide-border">
+          {videos.map((x, i) => (
+            <li key={x.sk} className="flex items-center gap-3 py-2 text-sm">
+              <span className="w-6 text-right text-xs text-muted-foreground">{i + 1}</span>
+              <Link to="/watch/$id" params={{ id: x.id }} className="w-24 shrink-0"><VideoThumb v={x} /></Link>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{x.title}</p>
+                <p className="text-xs text-muted-foreground">{x.views.toLocaleString()} views · {catName(x.category)} · {x.createdAt.slice(0, 10)}</p>
+              </div>
+              <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${x.status === "published" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{x.status === "published" ? "Live" : "Hidden"}</span>
+            </li>
+          ))}
+        </ul>
+        {v.length > 12 && <button onClick={() => setShowAll((s) => !s)} className={`${smallBtn} mt-3`}>{showAll ? "Show fewer" : `Show all ${v.length} videos`}</button>}
+      </section>
+
+      {byCat.length > 0 && (
+        <section className={card}>
+          <h3 className="font-semibold">Videos per category</h3>
+          <ul className="mt-3 space-y-2 text-sm">
+            {byCat.map((x) => (
+              <li key={x.name}>
+                <div className="flex justify-between"><span>{x.name}</span><span className="text-muted-foreground">{x.n}</span></div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded bg-secondary"><div className="h-full bg-primary" style={{ width: `${(x.n / v.length) * 100}%` }} /></div>
+              </li>
             ))}
-          </div>
-        </>
+          </ul>
+        </section>
       )}
-    </section>
+
+      <section className={card}>
+        <h3 className="font-semibold">Recent posts</h3>
+        {!recentPosts.length && <p className="mt-2 text-sm text-muted-foreground">No posts yet.</p>}
+        <ul className="mt-2 divide-y divide-border">
+          {recentPosts.map((x) => (
+            <li key={x.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{x.title || "Untitled"}</p>
+                <p className="text-xs text-muted-foreground">{KIND_LABEL[x.kind]} · updated {x.updatedAt.slice(0, 10)}</p>
+              </div>
+              <span className="shrink-0 text-xs text-muted-foreground">{x.status === "published" ? "Published" : "Draft"}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className={card}>
+        <h3 className="font-semibold">Latest inquiries</h3>
+        {!recentQ.length && <p className="mt-2 text-sm text-muted-foreground">No inquiries yet.</p>}
+        <ul className="mt-2 space-y-2">
+          {recentQ.map((x) => (
+            <li key={x["_id"]} className="rounded-lg border border-border p-3 text-sm">
+              <div className="flex justify-between gap-2"><b className="truncate">{x["name"]}</b><span className="shrink-0 text-xs text-muted-foreground">{x["createdAt"]?.slice(0, 10)}</span></div>
+              <a href={`mailto:${x["email"]}`} className="text-xs text-muted-foreground underline">{x["email"]}</a>
+              <p className="mt-1 line-clamp-2 text-muted-foreground">{x["message"]}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }
+
 
 /** Before publishing: shows the video's thumbnail; tap it to play the chosen file. */
 function LocalPreview({ video, thumb }: { video: File; thumb: File | null }) {
