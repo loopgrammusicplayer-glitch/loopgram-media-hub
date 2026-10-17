@@ -927,7 +927,7 @@ export const deleteInquiry = createServerFn({ method: "POST" })
   });
 
 // ---------- Editable pages & settings ----------
-export const PAGE_SLUGS = ["about", "privacy", "terms", "settings"] as const;
+export const PAGE_SLUGS = ["about", "privacy", "terms", "settings", "featured"] as const;
 export const getContent = createServerFn({ method: "GET" })
   .inputValidator((d: { slug: string }) => z.object({ slug: z.enum(PAGE_SLUGS) }).parse(d))
   .handler(async ({ data }) => {
@@ -947,6 +947,16 @@ export const getContent = createServerFn({ method: "GET" })
       return { title: "", body: "" };
     }
   });
+
+/** Public: the video the owner pinned to the top of the home page (stored as the "featured" page body). */
+export const getFeaturedVideo = createServerFn({ method: "GET" }).handler(async (): Promise<Video | null> => {
+  try {
+    const c = await getContent({ data: { slug: "featured" } });
+    const id = c.body.trim();
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+    return await getVideo({ data: { id } });
+  } catch { return null; }
+});
 
 export const saveContent = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => tokenSchema.extend({ slug: z.enum(PAGE_SLUGS), title: z.string().max(200), body: z.string().max(20000) }).parse(d))
