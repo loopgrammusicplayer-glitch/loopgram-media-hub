@@ -9,6 +9,7 @@ import { ArrowLeft, Share2 } from "lucide-react";
 import logoSrc from "@/assets/logo.png";
 import { KIND_LABEL, formatPostDate } from "@/lib/content.core";
 import { postThumbnail } from "@/lib/media.core";
+import { shareLink } from "@/lib/share";
 
 export const Route = createFileRoute("/posts/$slug")({
   loader: async ({ params }) => {
@@ -42,11 +43,9 @@ function PostPage() {
   const p = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const url = window.location.href;
-    try {
-      if (navigator.share) await navigator.share({ title: p.title, url });
-      else { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-    } catch { /* user cancelled */ }
+    const r = await shareLink(p.title, window.location.href);
+    if (r === "copied") { setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    else if (r === "failed") window.prompt("Copy this link:", window.location.href);
   };
   return (
     <div className="flex min-h-screen flex-col">

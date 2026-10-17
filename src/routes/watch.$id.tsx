@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { copyText, shareLink } from "@/lib/share";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/Header";
@@ -62,12 +63,12 @@ function Watch() {
   const [shared, setShared] = useState<string | null>(null);
   const [chip, setChip] = useState("all");
   useEffect(() => setChip("all"), [id]);
+  const flash = (msg: string) => { setShared(msg); setTimeout(() => setShared(null), 2500); };
   const share = async () => {
     const url = `${location.origin}/watch/${id}`;
-    try {
-      if (navigator.share) { await navigator.share({ title: v?.title ?? "Loopgram", url }); return; }
-      await navigator.clipboard.writeText(url); setShared("Link copied");
-    } catch { /* user cancelled */ }
+    const r = await shareLink(v?.title ?? "Loopgram", url);
+    if (r === "copied") flash("Link copied");
+    else if (r === "failed") window.prompt("Copy this link:", url);
   };
   const onTime = (el: { currentTime: number }) => {
     if (sent.current === id || el.currentTime < 0.0002) return;
@@ -116,7 +117,7 @@ function Watch() {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary hover:bg-accent" aria-label="More actions"><MoreHorizontal size={16} aria-hidden /></DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem onClick={async () => { await navigator.clipboard.writeText(`${location.origin}/watch/${id}`).catch(() => {}); setShared("Link copied"); }}>
+                      <DropdownMenuItem onClick={async () => { const url = `${location.origin}/watch/${id}`; if (await copyText(url)) flash("Link copied"); else window.prompt("Copy this link:", url); }}>
                         <Link2 size={14} aria-hidden /> Copy link
                       </DropdownMenuItem>
                       {ytId && (
