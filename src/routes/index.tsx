@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { VideoCard } from "@/components/VideoCard";
-import { getContent, listCategories, listVideos } from "@/lib/api.functions";
+import { getContent, getFeaturedVideo, listCategories, listVideos } from "@/lib/api.functions";
 
 const videosQuery = (c: string) =>
   infiniteQueryOptions({
@@ -25,6 +25,7 @@ export const Route = createFileRoute("/")({
     // Fetch feed, categories and banner together so the browser needs no follow-up requests.
     await Promise.all([
       qc.ensureInfiniteQueryData(videosQuery(deps.c)),
+      qc.ensureQueryData({ queryKey: ["featured"], queryFn: () => getFeaturedVideo(), staleTime: 60_000 }).catch(() => null),
       qc.ensureQueryData({ queryKey: ["cats"], queryFn: () => listCategories(), staleTime: 300_000 }).catch(() => null),
       qc.ensureQueryData({ queryKey: ["page", "settings"], queryFn: () => getContent({ data: { slug: "settings" } }), staleTime: 300_000 }).catch(() => null),
     ]);
@@ -51,6 +52,7 @@ function Home() {
   const { c = "all" } = Route.useSearch();
   const { data: cats = [] } = useQuery({ queryKey: ["cats"], queryFn: () => listCategories(), staleTime: 300_000 });
   const { data: site } = useQuery({ queryKey: ["page", "settings"], queryFn: () => getContent({ data: { slug: "settings" } }), staleTime: 300_000 });
+  const { data: featured } = useQuery({ queryKey: ["featured"], queryFn: () => getFeaturedVideo(), staleTime: 60_000 });
   const q = useSuspenseInfiniteQuery(videosQuery(c));
   const seen = new Set<string>();
   const videos = (q.data?.pages.flatMap((p) => p.videos) ?? []).filter((v) => !seen.has(v.id) && !!seen.add(v.id));
@@ -82,8 +84,14 @@ function Home() {
         ))}
       </nav>
       <main className="mx-auto grid w-full max-w-3xl flex-1 grid-cols-1 content-start gap-y-8 p-4">
+        {featured && c === "all" && (
+          <section aria-label="Featured video" className="rounded-2xl border border-primary/40 bg-card p-3">
+            <span className="mb-2 inline-block rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-primary-foreground">★ Featured</span>
+            <VideoCard v={featured} categoryName={name(featured.category)} />
+          </section>
+        )}
         {q.isLoading && Array.from({ length: 8 }).map((_, i) => <div key={i} className="aspect-video animate-pulse rounded-xl bg-secondary" />)}
-        {videos.map((v) => <VideoCard key={v.id} v={v} categoryName={name(v.category)} />)}
+        {videos.filter((v) => !(featured && c === "all" && v.id === featured.id)).map((v) => <VideoCard key={v.id} v={v} categoryName={name(v.category)} />)}
         {q.data && !videos.length && (
           <p className="col-span-full py-20 text-center text-muted-foreground">{q.data.pages[0]?.error ?? "No videos in this category yet."}</p>
         )}
