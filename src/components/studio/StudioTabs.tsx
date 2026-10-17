@@ -39,7 +39,15 @@ export function DashboardTab() {
         listMedia({ data: { token: t } }).catch(() => []),
         listCategories().catch(() => []),
       ]);
-      return { v, p, q: q as Record<string, string>[], m, c };
+      // Some list calls return wrapped objects or nothing on failure; always hand the view real arrays.
+      const arr = <T,>(x: unknown, key?: string): T[] => (Array.isArray(x) ? x : key && Array.isArray((x as any)?.[key]) ? (x as any)[key] : []) as T[];
+      return {
+        v: arr<(typeof v extends (infer U)[] ? U : any)>(v, "videos"),
+        p: arr<(typeof p extends (infer U)[] ? U : any)>(p, "posts"),
+        q: arr<Record<string, string>>(q, "items"),
+        m: arr<(typeof m extends (infer U)[] ? U : any)>(m, "items"),
+        c: arr<(typeof c extends (infer U)[] ? U : any)>(c, "categories"),
+      };
     },
   });
   const [showAll, setShowAll] = useState(false);
